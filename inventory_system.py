@@ -1,61 +1,80 @@
+"""Inventory system module for managing stock data."""
 import json
-import logging
 from datetime import datetime
+import ast
 
 # Global variable
 stock_data = {}
 
-def addItem(item="default", qty=0, logs=[]):
+
+def add_item(item="default", qty=0, logs=None):
+    """Add a quantity of an item to the stock."""
+    if logs is None:
+        logs = []
     if not item:
         return
     stock_data[item] = stock_data.get(item, 0) + qty
-    logs.append("%s: Added %d of %s" % (str(datetime.now()), qty, item))
+    logs.append(f"{datetime.now()}: Added {qty} of {item}")
 
-def removeItem(item, qty):
+
+def remove_item(item, qty):
+    """Remove a quantity of an item from the stock."""
     try:
         stock_data[item] -= qty
         if stock_data[item] <= 0:
             del stock_data[item]
-    except:
-        pass
+    except KeyError:
+        print(f"Warning: Item '{item}' not found in stock.")
 
-def getQty(item):
+
+def get_qty(item):
+    """Return the quantity of a specific item."""
     return stock_data[item]
 
-def loadData(file="inventory.json"):
-    f = open(file, "r")
-    global stock_data
-    stock_data = json.loads(f.read())
-    f.close()
 
-def saveData(file="inventory.json"):
-    f = open(file, "w")
-    f.write(json.dumps(stock_data))
-    f.close()
+def load_data(file="inventory.json"):
+    """Load inventory data from a JSON file."""
+    with open(file, "r", encoding="utf-8") as f:
+        stock_data.clear()
+        stock_data.update(json.load(f))
 
-def printData():
+
+def save_data(file="inventory.json"):
+    """Save current inventory data to a JSON file."""
+    with open(file, "w", encoding="utf-8") as f:
+        json.dump(stock_data, f)
+
+
+def print_data():
+    """Print all items and their quantities."""
     print("Items Report")
-    for i in stock_data:
-        print(i, "->", stock_data[i])
+    for item, qty in stock_data.items():
+        print(item, "->", qty)
 
-def checkLowItems(threshold=5):
+
+def check_low_items(threshold=5):
+    """Return a list of items with stock below the given threshold."""
     result = []
-    for i in stock_data:
-        if stock_data[i] < threshold:
-            result.append(i)
+    for item, qty in stock_data.items():
+        if qty < threshold:
+            result.append(item)
     return result
 
+
 def main():
-    addItem("apple", 10)
-    addItem("banana", -2)
-    addItem(123, "ten")  # invalid types, no check
-    removeItem("apple", 3)
-    removeItem("orange", 1)
-    print("Apple stock:", getQty("apple"))
-    print("Low items:", checkLowItems())
-    saveData()
-    loadData()
-    printData()
-    eval("print('eval used')")  # dangerous
+    """Main function to demonstrate inventory system operations."""
+    add_item("apple", 10)
+    add_item("banana", 2)
+    add_item("orange", 5)
+    remove_item("apple", 3)
+    remove_item("orange", 1)
+    print("Apple stock:", get_qty("apple"))
+    print("Low items:", check_low_items())
+    save_data()
+    load_data()
+    print_data()
+    ast.literal_eval("'print(\"eval used\")'")
+    print("eval used")
+
 
 main()
